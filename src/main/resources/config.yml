@@ -1,0 +1,58 @@
+# PluginPilot Main Configuration
+
+# General settings
+messages-prefix: "&6[PluginPilot]&r "
+default-language: "en"
+allow-external-sources: true
+
+# Storage settings
+database:
+  type: sqlite
+  filename: "pluginpilot.db"
+
+# Update/backup settings
+auto-update:
+  enabled: true
+  check-interval-minutes: 60
+  include-self: true
+
+backups:
+  enabled: true
+  keep-last: 3
+
+# Malware scanner
+security:
+  scan-on-download: true
+  scan-api-url: "https://api.virustotal.com/api/v3/files"
+  api-key: "your-virustotal-api-key-here"
+  fail-on-suspicious: true
+
+# Plugin repositories
+repositories:
+  - id: "spigotmc"
+    enabled: true
+    api-url: "https://api.spigotmc.org/legacy/update.php"
+  - id: "modrinth"
+    enabled: true
+    api-url: "https://api.modrinth.com/v2"
+  - id: "polymart"
+    enabled: true
+    api-url: "https://api.polymart.org/v1"
+  - id: "hangar"
+    enabled: true
+    api-url: "https://hangar.papermc.io/api/v1"
+  - id: "custom"
+    enabled: true
+
+# Cache settings
+cache:
+  search-results-ttl-minutes: 30
+  plugin-info-ttl-minutes: 60
+  max-search-results: 50
+
+# Tab completion settings
+tab-completion:
+  async-search: true
+  search-delay-ms: 500
+  loading-message: "&7Loading..."
+  max-suggestions: 10
