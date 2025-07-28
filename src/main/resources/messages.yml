@@ -1,0 +1,49 @@
+# PluginPilot Messages
+
+prefix: "&6[PluginPilot]&r "
+
+# General messages
+no-permission: "&cYou don't have permission to use this command."
+player-only: "&cThis command can only be used by players."
+invalid-usage: "&cInvalid usage. Use &e/{0} help &cfor more information."
+loading: "&7Loading..."
+search-loading: "&7Searching for plugins..."
+
+# Plugin management
+plugin-installed: "&aSuccessfully installed &e{0} v{1}&a!"
+plugin-updated: "&aSuccessfully updated &e{0} &ato version &e{1}&a!"
+plugin-removed: "&aSuccessfully removed &e{0}&a!"
+plugin-not-found: "&cPlugin &e{0} &cnot found!"
+plugin-already-exists: "&cPlugin &e{0} &cis already installed!"
+plugin-install-failed: "&cFailed to install plugin &e{0}&c: {1}"
+
+# Backup messages
+backup-created: "&aBackup created for &e{0} v{1}&a!"
+backup-restored: "&aRestored &e{0} &afrom backup version &e{1}&a!"
+no-backups-found: "&cNo backups found for plugin &e{0}&c!"
+
+# Security messages
+scan-started: "&7Starting security scan for &e{0}&7..."
+scan-clean: "&aPlugin &e{0} &apassed security scan!"
+scan-suspicious: "&cWarning: Plugin &e{0} &cflagged as suspicious!"
+scan-failed: "&cSecurity scan failed for &e{0}&c!"
+
+# Search messages
+search-results: "&6Found {0} results for &e'{1}'&6:"
+no-results: "&cNo plugins found matching &e'{0}'&c!"
+multiple-versions: "&7Multiple versions available for &e{0}&7:"
+
+# Help messages
+help-header: "&6=== PluginPilot Commands ==="
+help-show: "&e/pp show <plugin> &7- Preview plugin information"
+help-install: "&e/pp install <plugin> [version] &7- Install a plugin"
+help-update: "&e/pp update <plugin> &7- Update a plugin"
+help-updateall: "&e/pp updateall &7- Update all plugins"
+help-remove: "&e/pp remove <plugin> &7- Remove a plugin"
+help-backup: "&e/pp backup <plugin> &7- Backup a plugin"
+help-restore: "&e/pp restore <plugin> [version] &7- Restore from backup"
+help-scan: "&e/pp scan <plugin> &7- Scan plugin for malware"
+help-list: "&e/pp list &7- List managed plugins"
+help-detect: "&e/pp detect &7- Find unmanaged plugins"
+help-logs: "&e/pp logs &7- View plugin logs"
+help-sources: "&e/pp sources &7- Manage plugin sources"

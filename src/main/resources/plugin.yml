@@ -1,0 +1,59 @@
+name: PluginPilot
+version: '${project.version}'
+main: xyz.inv1s1bl3.pluginpilot.PluginPilot
+api-version: '1.21'
+authors: [inv1s1bl3]
+description: Advanced Plugin Manager for Minecraft Servers
+website: https://github.com/inv1s1bl3/pluginpilot
+
+commands:
+  pluginpilot:
+    description: Main PluginPilot command
+    aliases: [pp, ppilot]
+    usage: /<command> [subcommand]
+    permission: pluginpilot.use
+
+permissions:
+  pluginpilot.*:
+    description: All PluginPilot permissions
+    children:
+      pluginpilot.use: true
+      pluginpilot.view: true
+      pluginpilot.install: true
+      pluginpilot.update: true
+      pluginpilot.uninstall: true
+      pluginpilot.backup: true
+      pluginpilot.restore: true
+      pluginpilot.security: true
+      pluginpilot.sources: true
+      pluginpilot.debug: true
+  pluginpilot.use:
+    description: Basic PluginPilot usage
+    default: op
+  pluginpilot.view:
+    description: View plugin information
+    default: op
+  pluginpilot.install:
+    description: Install plugins
+    default: op
+  pluginpilot.update:
+    description: Update plugins
+    default: op
+  pluginpilot.uninstall:
+    description: Uninstall plugins
+    default: op
+  pluginpilot.backup:
+    description: Backup plugins
+    default: op
+  pluginpilot.restore:
+    description: Restore plugins from backup
+    default: op
+  pluginpilot.security:
+    description: Security scan permissions
+    default: op
+  pluginpilot.sources:
+    description: Manage plugin sources
+    default: op
+  pluginpilot.debug:
+    description: Debug and logs access
+    default: op
