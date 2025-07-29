@@ -41,18 +41,44 @@ public class HelpCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         plugin.getMessageFormatter().sendRawMessage(sender, "help-header");
+        
+        // Plugin Installation & Management
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-category-install");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-show");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-download");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-install");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-update");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-updateall");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-remove");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-delete");
+        
+        // Plugin Loading & Unloading
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-category-loading");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-load");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-unload");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-reload");
+        
+        // Backup & Security
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-category-backup");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-backup");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-restore");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-scan");
+        
+        // Information & Discovery
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-category-info");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-list");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-detect");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-discover");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-info");
+        
+        // System & Configuration
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-category-system");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-logs");
         plugin.getMessageFormatter().sendRawMessage(sender, "help-sources");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-refreshconfig");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-clearcache");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-debug");
+        plugin.getMessageFormatter().sendRawMessage(sender, "help-import");
     }
     
     @Override
