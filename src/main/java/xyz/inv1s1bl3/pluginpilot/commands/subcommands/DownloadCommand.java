@@ -1,41 +1,35 @@
 package xyz.inv1s1bl3.pluginpilot.commands.subcommands;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.plugin.InvalidDescriptionException;
-import org.bukkit.plugin.InvalidPluginException;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
 import xyz.inv1s1bl3.pluginpilot.PluginPilot;
 import xyz.inv1s1bl3.pluginpilot.commands.SubCommand;
 import xyz.inv1s1bl3.pluginpilot.models.PluginSearchResult;
 import xyz.inv1s1bl3.pluginpilot.models.PluginVersion;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public class InstallCommand extends SubCommand {
+public class DownloadCommand extends SubCommand {
     
-    public InstallCommand(PluginPilot plugin) {
+    public DownloadCommand(PluginPilot plugin) {
         super(plugin);
     }
     
     @Override
     public String getName() {
-        return "install";
+        return "download";
     }
     
     @Override
     public String getDescription() {
-        return "Download and enable a plugin";
+        return "Download a plugin without enabling it";
     }
     
     @Override
     public List<String> getAliases() {
-        return Arrays.asList("i", "add");
+        return Arrays.asList("dl", "fetch");
     }
     
     @Override
@@ -46,7 +40,7 @@ public class InstallCommand extends SubCommand {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length < 1) {
-            plugin.getMessageFormatter().sendMessage(sender, "invalid-usage", "/pp install <plugin> [version]");
+            plugin.getMessageFormatter().sendMessage(sender, "invalid-usage", "/pp download <plugin> [version]");
             return;
         }
         
@@ -55,7 +49,7 @@ public class InstallCommand extends SubCommand {
         
         plugin.getMessageFormatter().sendMessage(sender, "loading");
         
-        // Run installation asynchronously
+        // Run download asynchronously
         CompletableFuture.runAsync(() -> {
             try {
                 // Search for the plugin
@@ -78,7 +72,7 @@ public class InstallCommand extends SubCommand {
                 List<PluginVersion> versions = plugin.getSourceManager().getPluginVersions(targetPlugin);
                 
                 if (versions.isEmpty()) {
-                    plugin.getMessageFormatter().sendMessage(sender, "plugin-install-failed", pluginName, "No versions available");
+                    plugin.getMessageFormatter().sendMessage(sender, "plugin-download-failed", pluginName, "No versions available");
                     return;
                 }
                 
@@ -91,7 +85,7 @@ public class InstallCommand extends SubCommand {
                             .orElse(null);
                     
                     if (targetVersion == null) {
-                        plugin.getMessageFormatter().sendMessage(sender, "plugin-install-failed", pluginName, "Version " + version + " not found");
+                        plugin.getMessageFormatter().sendMessage(sender, "plugin-download-failed", pluginName, "Version " + version + " not found");
                         return;
                     }
                 } else {
@@ -105,57 +99,21 @@ public class InstallCommand extends SubCommand {
                     return;
                 }
                 
-                // Download and install
+                // Download plugin
                 boolean success = plugin.getSourceManager().downloadAndInstallPlugin(targetPlugin, targetVersion);
                 
                 if (success) {
                     // Save to database
                     plugin.getDatabaseManager().saveInstalledPlugin(targetPlugin, targetVersion);
                     plugin.getMessageFormatter().sendMessage(sender, "plugin-downloaded", targetPlugin.getName(), targetVersion.getVersion());
-                    plugin.getDatabaseManager().logAction("INSTALL", "Plugin downloaded via command", targetPlugin.getName());
-                    
-                    // Now load and enable the plugin
-                    Bukkit.getScheduler().runTask(plugin, () -> {
-                        try {
-                            File pluginsDir = new File("plugins");
-                            File pluginFile = null;
-                            
-                            // Find the plugin file
-                            for (File file : pluginsDir.listFiles()) {
-                                if (file.isFile() && file.getName().toLowerCase().endsWith(".jar")) {
-                                    try {
-                                        // Try to load the plugin description to check the name
-                                        Plugin loadedPlugin = Bukkit.getPluginManager().loadPlugin(file);
-                                        if (loadedPlugin != null && loadedPlugin.getName().equalsIgnoreCase(targetPlugin.getName())) {
-                                            pluginFile = file;
-                                            // Enable the plugin
-                                            loadedPlugin.onLoad();
-                                            Bukkit.getPluginManager().enablePlugin(loadedPlugin);
-                                            plugin.getMessageFormatter().sendMessage(sender, "plugin-enabled", targetPlugin.getName());
-                                            plugin.getDatabaseManager().logAction("ENABLE", "Plugin enabled after installation", targetPlugin.getName());
-                                            break;
-                                        }
-                                    } catch (Exception e) {
-                                        // Not the plugin we're looking for, continue searching
-                                    }
-                                }
-                            }
-                            
-                            if (pluginFile == null) {
-                                plugin.getMessageFormatter().sendMessage(sender, "plugin-enable-failed", targetPlugin.getName(), "Plugin file not found");
-                            }
-                        } catch (Exception e) {
-                            plugin.getLogger().severe("Error enabling plugin " + targetPlugin.getName() + ": " + e.getMessage());
-                            plugin.getMessageFormatter().sendMessage(sender, "plugin-enable-failed", targetPlugin.getName(), e.getMessage());
-                        }
-                    });
+                    plugin.getDatabaseManager().logAction("DOWNLOAD", "Plugin downloaded via command", targetPlugin.getName());
                 } else {
-                    plugin.getMessageFormatter().sendMessage(sender, "plugin-install-failed", pluginName, "Download failed");
+                    plugin.getMessageFormatter().sendMessage(sender, "plugin-download-failed", pluginName, "Download failed");
                 }
                 
             } catch (Exception e) {
-                plugin.getLogger().severe("Error installing plugin " + pluginName + ": " + e.getMessage());
-                plugin.getMessageFormatter().sendMessage(sender, "plugin-install-failed", pluginName, e.getMessage());
+                plugin.getLogger().severe("Error downloading plugin " + pluginName + ": " + e.getMessage());
+                plugin.getMessageFormatter().sendMessage(sender, "plugin-download-failed", pluginName, e.getMessage());
             }
         });
     }

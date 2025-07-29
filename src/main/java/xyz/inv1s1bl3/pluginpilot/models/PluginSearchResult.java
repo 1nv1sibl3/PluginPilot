@@ -12,6 +12,7 @@ public class PluginSearchResult {
     private int downloads;
     private double rating;
     private String latestVersion;
+    private String serverType; // Stores server type compatibility (bukkit, spigot, paper)
     
     public PluginSearchResult() {}
     
@@ -55,4 +56,7 @@ public class PluginSearchResult {
     
     public String getLatestVersion() { return latestVersion; }
     public void setLatestVersion(String latestVersion) { this.latestVersion = latestVersion; }
+    
+    public String getServerType() { return serverType; }
+    public void setServerType(String serverType) { this.serverType = serverType; }
 }

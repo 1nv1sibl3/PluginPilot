@@ -37,7 +37,7 @@ public class AsyncTabCompleter {
         if (cached != null && !cached.isEmpty()) {
             return cached.stream()
                     .filter(name -> name.toLowerCase().startsWith(query))
-                    .limit(plugin.getConfig().getInt("tab-completion.max-suggestions", 10))
+                    .limit(plugin.getConfig().getInt("tab-completion.max-suggestions", 20))
                     .toList();
         }
         
@@ -60,13 +60,28 @@ public class AsyncTabCompleter {
         
         CompletableFuture<List<String>> searchFuture = CompletableFuture.supplyAsync(() -> {
             try {
+                // Search all enabled sources
                 List<PluginSearchResult> results = plugin.getSourceManager().searchPlugins(query);
                 
-                List<String> completions = results.stream()
-                        .map(PluginSearchResult::getName)
-                        .filter(name -> name.toLowerCase().startsWith(query))
-                        .limit(plugin.getConfig().getInt("tab-completion.max-suggestions", 10))
-                        .toList();
+                // Create a set of unique plugin names (case-insensitive)
+                Set<String> uniqueNames = new HashSet<>();
+                List<String> completions = new ArrayList<>();
+                
+                // Process results to ensure unique names while preserving original case
+                for (PluginSearchResult result : results) {
+                    String name = result.getName();
+                    String lowerName = name.toLowerCase();
+                    
+                    if (lowerName.startsWith(query.toLowerCase()) && !uniqueNames.contains(lowerName)) {
+                        uniqueNames.add(lowerName);
+                        completions.add(name);
+                    }
+                }
+                
+                // Limit the number of suggestions
+                if (completions.size() > plugin.getConfig().getInt("tab-completion.max-suggestions", 20)) {
+                    completions = completions.subList(0, plugin.getConfig().getInt("tab-completion.max-suggestions", 20));
+                }
                 
                 // Cache results
                 try {

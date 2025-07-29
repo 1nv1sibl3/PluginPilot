@@ -4,6 +4,7 @@
 messages-prefix: "&6[PluginPilot]&r "
 default-language: "en"
 allow-external-sources: true
+debug-mode: false
 
 # Storage settings
 database:
@@ -15,12 +16,23 @@ auto-update:
   enabled: true
   check-interval-minutes: 60
   include-self: true
+  exception-list:
+    - "PluginPilot"
+    - "Vault"
+    # Add plugin names here to exclude from auto-updates
 
 backups:
   enabled: true
   keep-last: 3
+  auto-backup-before-update: true
 
-# Malware scanner
+# Auto-detection of manually added/removed plugins
+auto-detection:
+  enabled: true
+  check-interval-minutes: 1 
+  notify-admins: true
+
+# Malware scanner (under development)
 security:
   scan-on-download: true
   scan-api-url: "https://api.virustotal.com/api/v3/files"
@@ -30,29 +42,52 @@ security:
 # Plugin repositories
 repositories:
   - id: "spigotmc"
-    enabled: true
+    enabled: false
     api-url: "https://api.spigotmc.org/legacy/update.php"
+    # SpigotMC integration is currently under development
   - id: "modrinth"
     enabled: true
     api-url: "https://api.modrinth.com/v2"
   - id: "polymart"
-    enabled: true
+    enabled: false
     api-url: "https://api.polymart.org/v1"
+    # Polymart integration is currently under development
   - id: "hangar"
     enabled: true
     api-url: "https://hangar.papermc.io/api/v1"
+    #custom sources in development.
   - id: "custom"
-    enabled: true
+    enabled: false
+    api-url: "https://api.github.com/repos"
+    custom-sources:
+      jenkins:
+        enabled: false
+        base-url: "https://ci.example.com/job"
+        artifact-path: "lastSuccessfulBuild/artifact"
+      github:
+        enabled: false
+        base-url: "https://api.github.com/repos"
+        token: "your-github-token-here"
+      direct-url:
+        enabled: false
+        urls:
+          - "https://example.com/plugins/{plugin}.jar"
+          - "https://cdn.example.com/downloads/{plugin}-{version}.jar"
 
 # Cache settings
 cache:
   search-results-ttl-minutes: 30
   plugin-info-ttl-minutes: 60
-  max-search-results: 50
+  max-search-results: 100
+
+# Server type filtering
+allowed-server-types: "bukkit,spigot,paper"
+# Comma-separated list of server types to include in search results
+# Available options: bukkit, spigot, paper
 
 # Tab completion settings
 tab-completion:
   async-search: true
   search-delay-ms: 500
-  loading-message: "&7Loading..."
-  max-suggestions: 10
+  loading-message: "Loading..."
+  max-suggestions: 100

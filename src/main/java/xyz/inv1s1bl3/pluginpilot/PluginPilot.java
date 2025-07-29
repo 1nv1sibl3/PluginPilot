@@ -6,6 +6,7 @@ import xyz.inv1s1bl3.pluginpilot.persistence.DatabaseManager;
 import xyz.inv1s1bl3.pluginpilot.integration.PluginSourceManager;
 import xyz.inv1s1bl3.pluginpilot.util.MessageFormatter;
 import xyz.inv1s1bl3.pluginpilot.tasks.AutoUpdateTask;
+import xyz.inv1s1bl3.pluginpilot.tasks.PluginDetectionTask;
 
 import java.util.logging.Level;
 
@@ -16,6 +17,7 @@ public final class PluginPilot extends JavaPlugin {
     private PluginSourceManager sourceManager;
     private MessageFormatter messageFormatter;
     private AutoUpdateTask autoUpdateTask;
+    private PluginDetectionTask detectionTask;
     
     @Override
     public void onEnable() {
@@ -33,7 +35,17 @@ public final class PluginPilot extends JavaPlugin {
         // Start auto-update task if enabled
         startAutoUpdateTask();
         
-        getLogger().info("PluginPilot has been enabled successfully!");
+        // Start plugin detection task if enabled
+        startDetectionTask();
+        
+        // Display aesthetic enable message with GitHub attribution
+        getLogger().info("\n" +
+                "  ╔═══════════════════════════════════════════════╗\n" +
+                "  ║             ✦ PluginPilot v" + getDescription().getVersion() + " ✦            ║\n" +
+                "  ║                                               ║\n" +
+                "  ║  Successfully enabled and ready to serve!     ║\n" +
+                "  ║  Created by: inv1s1bl3 (GitHub: @1nv1sibl3)   ║\n" +
+                "  ╚═══════════════════════════════════════════════╝");
     }
     
     @Override
@@ -41,6 +53,11 @@ public final class PluginPilot extends JavaPlugin {
         // Stop auto-update task
         if (autoUpdateTask != null) {
             autoUpdateTask.stop();
+        }
+        
+        // Stop detection task
+        if (detectionTask != null) {
+            detectionTask.stop();
         }
         
         // Close database connection
@@ -83,6 +100,18 @@ public final class PluginPilot extends JavaPlugin {
         }
     }
     
+    private void startDetectionTask() {
+        if (getConfig().getBoolean("auto-detection.enabled", true)) {
+            int intervalMinutes = getConfig().getInt("auto-detection.check-interval-minutes", 1);
+            detectionTask = new PluginDetectionTask(this);
+            detectionTask.start(intervalMinutes);
+            
+            if (getConfig().getBoolean("debug-mode", false)) {
+                getLogger().info("Plugin detection task started with " + intervalMinutes + " minute interval");
+            }
+        }
+    }
+    
     // Getters for components
     public static PluginPilot getInstance() {
         return instance;
@@ -98,5 +127,36 @@ public final class PluginPilot extends JavaPlugin {
     
     public MessageFormatter getMessageFormatter() {
         return messageFormatter;
+    }
+    
+    /**
+     * Reloads the plugin configuration and refreshes all components.
+     * This allows changes to config.yml to take effect without requiring a server restart.
+     */
+    public void reload() {
+        getLogger().info("Reloading PluginPilot configuration...");
+        
+        // Reload config.yml
+        reloadConfig();
+        
+        // Refresh sources based on new config
+        if (sourceManager != null) {
+            sourceManager.refreshSources();
+        }
+        
+        // Restart tasks with new intervals if needed
+        if (autoUpdateTask != null && getConfig().getBoolean("auto-update.enabled", true)) {
+            autoUpdateTask.stop();
+            int intervalMinutes = getConfig().getInt("auto-update.check-interval-minutes", 60);
+            autoUpdateTask.start(intervalMinutes);
+        }
+        
+        if (detectionTask != null && getConfig().getBoolean("auto-detection.enabled", true)) {
+            detectionTask.stop();
+            int intervalMinutes = getConfig().getInt("auto-detection.check-interval-minutes", 1);
+            detectionTask.start(intervalMinutes);
+        }
+        
+        getLogger().info("PluginPilot configuration reloaded successfully!");
     }
 }

@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class HangarSource implements PluginSource {
@@ -67,6 +68,9 @@ public class HangarSource implements PluginSource {
                 result.setAuthor(project.get("owner").getAsString());
                 result.setSourceType("hangar");
                 result.setSourceId(project.get("name").getAsString());
+                
+                // Set server type to paper since Hangar is primarily for Paper plugins
+                result.setServerType("paper");
                 
                 if (project.has("stats") && project.get("stats").isJsonObject()) {
                     JsonObject stats = project.getAsJsonObject("stats");
