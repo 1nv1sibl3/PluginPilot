@@ -3,8 +3,13 @@ package xyz.inv1s1bl3.pluginpilot.persistence;
 import xyz.inv1s1bl3.pluginpilot.PluginPilot;
 import xyz.inv1s1bl3.pluginpilot.models.PluginSearchResult;
 import xyz.inv1s1bl3.pluginpilot.models.PluginVersion;
+import xyz.inv1s1bl3.pluginpilot.models.BackupRecord;
+import xyz.inv1s1bl3.pluginpilot.models.LogEntry;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -201,6 +206,94 @@ public class DatabaseManager {
             stmt.setString(1, pluginName);
             stmt.executeUpdate();
         }
+        
+        // Log the removal
+        logAction("remove", "Plugin removed", pluginName);
+    }
+    
+    public String getPluginVersion(String pluginName) throws SQLException {
+        String sql = "SELECT version FROM plugins WHERE name = ? AND status = 'active'";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, pluginName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("version");
+                }
+            }
+        }
+        return null;
+    }
+    
+    public String getPluginFilePath(String pluginName) throws SQLException {
+        String sql = "SELECT file_path FROM plugins WHERE name = ? AND status = 'active'";
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, pluginName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("file_path");
+                }
+            }
+        }
+        return null;
+    }
+    
+    public List<BackupRecord> getPluginBackups(String pluginName) throws SQLException {
+        String sql = "SELECT * FROM backups WHERE plugin_name = ? ORDER BY backup_date DESC";
+        List<BackupRecord> backups = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, pluginName);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    BackupRecord backup = new BackupRecord();
+                    backup.setId(rs.getInt("id"));
+                    backup.setPluginName(rs.getString("plugin_name"));
+                    backup.setVersion(rs.getString("version"));
+                    backup.setBackupDate(rs.getTimestamp("backup_date").toLocalDateTime());
+                    backup.setFilePath(rs.getString("file_path"));
+                    backups.add(backup);
+                }
+            }
+        }
+        
+        return backups;
+    }
+    
+    
+    public int getCacheCount(String tableName) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + tableName;
+        
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+    
+    public List<String> getRecentCacheEntries(String tableName, int limit) throws SQLException {
+        String sql;
+        if (tableName.equals("search_cache")) {
+            sql = "SELECT DISTINCT query FROM search_cache ORDER BY cached_at DESC LIMIT ?";
+        } else {
+            sql = "SELECT DISTINCT plugin_id FROM version_cache ORDER BY cached_at DESC LIMIT ?";
+        }
+        
+        List<String> entries = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    entries.add(rs.getString(1));
+                }
+            }
+        }
+        
+        return entries;
     }
     
     public void saveBackup(String pluginName, String version, String filePath) throws SQLException {
@@ -214,6 +307,34 @@ public class DatabaseManager {
             stmt.setString(2, version);
             stmt.setString(3, filePath);
             stmt.executeUpdate();
+        }
+    }
+    
+    public void createBackupBeforeRemoval(String pluginName, String version, String filePath) throws SQLException {
+        try {
+            // Create backup directory if it doesn't exist
+            File backupDir = new File(plugin.getDataFolder(), "backups");
+            if (!backupDir.exists()) {
+                backupDir.mkdirs();
+            }
+            
+            // Create a backup file with timestamp
+            File sourceFile = new File(filePath);
+            if (sourceFile.exists()) {
+                String timestamp = LocalDateTime.now().toString().replace(":", "-").replace(".", "-");
+                File backupFile = new File(backupDir, pluginName + "_" + version + "_" + timestamp + ".jar");
+                
+                // Copy the file
+                Files.copy(sourceFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                
+                // Save backup record in database
+                saveBackup(pluginName, version, backupFile.getAbsolutePath());
+                
+                plugin.getLogger().info("Created backup of " + pluginName + " v" + version + ": " + backupFile.getName());
+            }
+        } catch (IOException e) {
+            plugin.getLogger().warning("Failed to create backup for " + pluginName + ": " + e.getMessage());
+            throw new SQLException("Failed to create backup: " + e.getMessage());
         }
     }
     
@@ -371,6 +492,92 @@ public class DatabaseManager {
             stmt.execute("DELETE FROM search_cache");
             stmt.execute("DELETE FROM version_cache");
         }
+    }
+    
+    /**
+     * Retrieves recent logs from the database
+     * @param limit Maximum number of logs to retrieve
+     * @return List of log entries
+     */
+    public List<LogEntry> getRecentLogs(int limit) throws SQLException {
+        String sql = "SELECT * FROM logs ORDER BY timestamp DESC LIMIT ?";
+        List<LogEntry> logs = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LogEntry log = new LogEntry();
+                    log.setId(rs.getInt("id"));
+                    log.setTimestamp(rs.getTimestamp("timestamp").getTime());
+                    log.setType(rs.getString("type"));
+                    log.setMessage(rs.getString("message"));
+                    log.setPluginName(rs.getString("plugin_name"));
+                    logs.add(log);
+                }
+            }
+        }
+        
+        return logs;
+    }
+    
+    /**
+     * Retrieves logs for a specific plugin
+     * @param pluginName Name of the plugin
+     * @param limit Maximum number of logs to retrieve
+     * @return List of log entries for the specified plugin
+     */
+    public List<LogEntry> getLogsByPlugin(String pluginName, int limit) throws SQLException {
+        String sql = "SELECT * FROM logs WHERE plugin_name = ? ORDER BY timestamp DESC LIMIT ?";
+        List<LogEntry> logs = new ArrayList<>();
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, pluginName);
+            stmt.setInt(2, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LogEntry log = new LogEntry();
+                    log.setId(rs.getInt("id"));
+                    log.setTimestamp(rs.getTimestamp("timestamp").getTime());
+                    log.setType(rs.getString("type"));
+                    log.setMessage(rs.getString("message"));
+                    log.setPluginName(rs.getString("plugin_name"));
+                    logs.add(log);
+                }
+            }
+        }
+        
+        return logs;
+    }
+    
+    /**
+     * Clears all logs from the database
+     * @return Number of logs deleted
+     */
+    public int clearLogs() throws SQLException {
+        String sql = "DELETE FROM logs";
+        
+        try (Statement stmt = connection.createStatement()) {
+            return stmt.executeUpdate(sql);
+        }
+    }
+    
+    /**
+     * Gets a list of all plugin names that have logs in the database
+     * @return List of plugin names
+     */
+    public List<String> getLoggedPluginNames() throws SQLException {
+        String sql = "SELECT DISTINCT plugin_name FROM logs WHERE plugin_name IS NOT NULL ORDER BY plugin_name";
+        List<String> plugins = new ArrayList<>();
+        
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                plugins.add(rs.getString("plugin_name"));
+            }
+        }
+        
+        return plugins;
     }
     
     public void close() {

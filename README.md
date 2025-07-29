@@ -15,18 +15,39 @@ A comprehensive plugin manager for Minecraft servers that supports multiple plug
 
 ### Command System
 All commands support extensive tab completion:
-- `/pp install <plugin> [version]` - Install plugins with live search completion
+
+#### Plugin Installation & Management
+- `/pp install <plugin> [version]` - Download and enable a plugin
+- `/pp download <plugin> [version]` - Download a plugin without enabling it
 - `/pp show <plugin>` - Preview plugin information
 - `/pp update <plugin>` - Update individual plugins
 - `/pp updateall` - Update all managed plugins
 - `/pp remove <plugin>` - Uninstall plugins
+- `/pp delete <plugin>` - Delete plugin files
+
+#### Plugin Loading & Unloading
+- `/pp load <plugin>` - Load a plugin from the plugins directory
+- `/pp unload <plugin>` - Unload a plugin
+- `/pp reload <plugin>` - Reload a specific plugin
+
+#### Backup & Security
 - `/pp backup <plugin>` - Create plugin backups
 - `/pp restore <plugin> [version]` - Restore from backups
 - `/pp scan <plugin>` - Security scan plugins
+
+#### Information & Discovery
 - `/pp list` - List all managed plugins
 - `/pp detect` - Find unmanaged plugins
-- `/pp logs` - View/upload debug logs
+- `/pp discover` - Discover popular plugins
+- `/pp info` - Show plugin information
+
+#### System & Configuration
+- `/pp logs` - View, export or clear plugin logs
 - `/pp sources` - Manage plugin repositories
+- `/pp refreshconfig` - Reload PluginPilot configuration
+- `/pp clearcache` - Clear plugin search cache
+- `/pp debug` - Toggle debug mode
+- `/pp import` - Import plugins from other managers
 
 ### Advanced Tab Completion
 The plugin features intelligent async tab completion that:
@@ -77,13 +98,19 @@ The plugin is highly configurable through `config.yml`:
 ## Permissions
 
 - `pluginpilot.*` - All permissions
-- `pluginpilot.install` - Install plugins
+- `pluginpilot.use` - Basic usage permission
+- `pluginpilot.install` - Install and download plugins
 - `pluginpilot.update` - Update plugins
 - `pluginpilot.uninstall` - Remove plugins
+- `pluginpilot.load` - Load/unload/reload plugins
 - `pluginpilot.backup` - Backup/restore plugins
 - `pluginpilot.security` - Security scanning
 - `pluginpilot.sources` - Manage sources
 - `pluginpilot.debug` - Access logs and debug info
+- `pluginpilot.discover` - Discover popular plugins
+- `pluginpilot.import` - Import plugins from other managers
+- `pluginpilot.clearcache` - Clear plugin search cache
+- `pluginpilot.refreshconfig` - Reload plugin configuration
 
 ## Development
 

@@ -29,10 +29,14 @@ public class PPilotCommand implements CommandExecutor, TabCompleter {
     private void registerSubCommands() {
         // Register all subcommands
         registerSubCommand(new ShowCommand(plugin));
+        registerSubCommand(new DownloadCommand(plugin));
         registerSubCommand(new InstallCommand(plugin));
         registerSubCommand(new UpdateCommand(plugin));
         registerSubCommand(new UpdateAllCommand(plugin));
         registerSubCommand(new RemoveCommand(plugin));
+        registerSubCommand(new LoadCommand(plugin));
+        registerSubCommand(new UnloadCommand(plugin));
+        registerSubCommand(new ReloadCommand(plugin));
         registerSubCommand(new BackupCommand(plugin));
         registerSubCommand(new RestoreCommand(plugin));
         registerSubCommand(new ScanCommand(plugin));
@@ -46,6 +50,8 @@ public class PPilotCommand implements CommandExecutor, TabCompleter {
         registerSubCommand(new DeleteCommand(plugin));
         registerSubCommand(new DiscoverCommand(plugin));
         registerSubCommand(new ImportCommand(plugin));
+        registerSubCommand(new DebugCommand(plugin));
+        registerSubCommand(new RefreshConfigCommand(plugin));
     }
     
     private void registerSubCommand(SubCommand subCommand) {
@@ -87,16 +93,14 @@ public class PPilotCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            // Tab complete subcommands
-            return subCommands.keySet().stream()
-                    .filter(cmd -> cmd.startsWith(args[0].toLowerCase()))
-                    .filter(cmd -> {
-                        SubCommand subCmd = subCommands.get(cmd);
-                        return subCmd.hasPermission(sender);
-                    })
+            // Tab complete subcommands (only main command names, not aliases)
+            return subCommands.values().stream()
+                    .distinct() // Remove duplicates (same command with different aliases)
+                    .filter(subCmd -> subCmd.getName().toLowerCase().startsWith(args[0].toLowerCase()))
+                    .filter(subCmd -> subCmd.hasPermission(sender))
+                    .map(SubCommand::getName)
                     .sorted()
-                    .distinct()
-                    .limit(10)
+                    .limit(20)
                     .toList();
         }
         
@@ -120,10 +124,11 @@ public class PPilotCommand implements CommandExecutor, TabCompleter {
     }
     
     private boolean needsAsyncCompletion(String subCommand, String[] args) {
-        // Commands that need async plugin name completion
+        // Commands that need async plugin name completion from online sources
         return switch (subCommand) {
-            case "install", "add" -> args.length == 1;
-            case "show", "info", "update", "remove", "backup", "restore", "scan" -> args.length == 1;
+            case "install", "add", "i" -> args.length == 1;
+            case "download", "dl", "fetch" -> args.length == 1;
+            case "show" -> args.length == 1;
             default -> false;
         };
     }

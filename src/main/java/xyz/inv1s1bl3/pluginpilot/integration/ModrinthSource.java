@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ModrinthSource implements PluginSource {
@@ -39,52 +40,106 @@ public class ModrinthSource implements PluginSource {
     
     @Override
     public List<PluginSearchResult> searchPlugins(String query) throws Exception {
-        String url = baseUrl + "/search?query=" + query + "&facets=[[\"project_type:plugin\"],[\"categories:bukkit\"]]&limit=20";
+        // Fix the search URL - use proper encoding and search for plugins only
+        String encodedQuery = java.net.URLEncoder.encode(query, "UTF-8");
         
-        Request request = new Request.Builder()
-                .url(url)
-                .header("User-Agent", "PluginPilot/1.0.0")
-                .build();
+        // Try searching in each server type category sequentially until we find results
+        List<String> serverTypesToSearch = Arrays.asList("bukkit", "spigot", "paper");
+        List<PluginSearchResult> results = new ArrayList<>();
         
-        try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new Exception("Modrinth API error: " + response.code());
+        for (String serverType : serverTypesToSearch) {
+            String url = baseUrl + "/search?query=" + encodedQuery + 
+                        "&facets=[[\"project_type:plugin\"],[\"categories:" + serverType + "\"]]&limit=20";
+            
+            if (plugin.getConfig().getBoolean("debug-mode", false)) {
+                plugin.getLogger().info("Modrinth search URL for " + serverType + ": " + url);
             }
             
-            String body = response.body().string();
-            JsonObject json = gson.fromJson(body, JsonObject.class);
-            JsonArray hits = json.getAsJsonArray("hits");
+            Request request = new Request.Builder()
+                    .url(url)
+                    .header("User-Agent", "PluginPilot/1.0.0")
+                    .build();
             
-            List<PluginSearchResult> results = new ArrayList<>();
-            
-            for (JsonElement hit : hits) {
-                JsonObject project = hit.getAsJsonObject();
-                
-                PluginSearchResult result = new PluginSearchResult();
-                result.setId(project.get("project_id").getAsString());
-                result.setName(project.get("title").getAsString());
-                result.setDescription(project.get("description").getAsString());
-                result.setAuthor(project.get("author").getAsString());
-                result.setSourceType("modrinth");
-                result.setSourceId(project.get("project_id").getAsString());
-                result.setDownloads(project.get("downloads").getAsInt());
-                
-                if (project.has("icon_url") && !project.get("icon_url").isJsonNull()) {
-                    result.setIconUrl(project.get("icon_url").getAsString());
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    if (plugin.getConfig().getBoolean("debug-mode", false)) {
+                        plugin.getLogger().warning("Modrinth API error " + response.code() + ": " + response.message());
+                    }
+                    continue; // Try next server type instead of throwing exception
                 }
                 
-                if (project.has("versions") && project.get("versions").isJsonArray()) {
-                    JsonArray versions = project.getAsJsonArray("versions");
-                    if (versions.size() > 0) {
-                        result.setLatestVersion(versions.get(0).getAsString());
+                String body = response.body().string();
+                JsonObject json = gson.fromJson(body, JsonObject.class);
+                JsonArray hits = json.getAsJsonArray("hits");
+                
+                if (plugin.getConfig().getBoolean("debug-mode", false)) {
+                    plugin.getLogger().info("Modrinth returned " + hits.size() + " results for " + serverType + " query: " + query);
+                    plugin.getLogger().info("Response body preview: " + body.substring(0, Math.min(200, body.length())));
+                }
+                
+                // If we found results, process them and stop searching
+                if (hits.size() > 0) {
+                    for (JsonElement hit : hits) {
+                        JsonObject project = hit.getAsJsonObject();
+                        
+                        PluginSearchResult result = new PluginSearchResult();
+                        result.setId(project.get("project_id").getAsString());
+                        result.setName(project.get("title").getAsString());
+                        result.setDescription(project.get("description").getAsString());
+                        result.setAuthor(project.get("author").getAsString());
+                        result.setSourceType("modrinth");
+                        result.setSourceId(project.get("project_id").getAsString());
+                        result.setDownloads(project.get("downloads").getAsInt());
+                        
+                        // Set server type based on current search category
+                        result.setServerType(serverType);
+                        
+                        // Also check categories for more specific server type info
+                        if (project.has("categories") && project.get("categories").isJsonArray()) {
+                            JsonArray categories = project.getAsJsonArray("categories");
+                            for (JsonElement category : categories) {
+                                String categoryStr = category.getAsString().toLowerCase();
+                                if (categoryStr.contains("bukkit")) {
+                                    result.setServerType("bukkit");
+                                    break;
+                                } else if (categoryStr.contains("spigot")) {
+                                    result.setServerType("spigot");
+                                    break;
+                                } else if (categoryStr.contains("paper")) {
+                                    result.setServerType("paper");
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (project.has("icon_url") && !project.get("icon_url").isJsonNull()) {
+                            result.setIconUrl(project.get("icon_url").getAsString());
+                        }
+                        
+                        if (project.has("versions") && project.get("versions").isJsonArray()) {
+                            JsonArray versions = project.getAsJsonArray("versions");
+                            if (versions.size() > 0) {
+                                result.setLatestVersion(versions.get(0).getAsString());
+                            }
+                        }
+                        
+                        results.add(result);
+                    }
+                    
+                    // If we found results, stop searching through server types
+                    if (!results.isEmpty()) {
+                        break;
                     }
                 }
-                
-                results.add(result);
+            } catch (Exception e) {
+                if (plugin.getConfig().getBoolean("debug-mode", false)) {
+                    plugin.getLogger().warning("Error searching Modrinth with " + serverType + ": " + e.getMessage());
+                }
+                // Continue to next server type on error
             }
-            
-            return results;
         }
+        
+        return results;
     }
     
     @Override

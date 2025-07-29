@@ -117,8 +117,14 @@ public class InfoCommand extends SubCommand {
     @Override
     public List<String> onTabComplete(CommandSender sender, String[] args) {
         if (args.length == 1) {
-            // This will be handled by AsyncTabCompleter
-            return new ArrayList<>();
+            try {
+                return plugin.getDatabaseManager().getInstalledPluginNames().stream()
+                        .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
+                        .limit(10)
+                        .toList();
+            } catch (Exception e) {
+                return new ArrayList<>();
+            }
         }
         return new ArrayList<>();
     }
