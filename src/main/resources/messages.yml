@@ -56,23 +56,46 @@ multiple-versions: "&7Multiple versions available for &e{0}&7:"
 
 # Help messages
 help-header: "&6=== PluginPilot Commands ==="
+
+# Help categories
+help-category-install: "&b--- Plugin Installation & Management ---"
+help-category-loading: "&b--- Plugin Loading & Unloading ---"
+help-category-backup: "&b--- Backup & Security ---"
+help-category-info: "&b--- Information & Discovery ---"
+help-category-system: "&b--- System & Configuration ---"
+
+# Installation & Management commands
 help-show: "&e/pp show <plugin> &7- Preview plugin information"
 help-download: "&e/pp download <plugin> [version] &7- Download a plugin without enabling it"
 help-install: "&e/pp install <plugin> [version] &7- Download and enable a plugin"
 help-update: "&e/pp update <plugin> &7- Update a plugin"
 help-updateall: "&e/pp updateall &7- Update all plugins"
 help-remove: "&e/pp remove <plugin> &7- Remove a plugin"
+help-delete: "&e/pp delete <plugin> &7- Delete plugin files"
+
+# Loading & Unloading commands
 help-load: "&e/pp load <plugin> &7- Load a plugin"
 help-unload: "&e/pp unload <plugin> &7- Unload a plugin"
 help-reload: "&e/pp reload <plugin> &7- Reload a specific plugin"
-help-refreshconfig: "&e/pp refreshconfig &7- Reload PluginPilot configuration"
+
+# Backup & Security commands
 help-backup: "&e/pp backup <plugin> &7- Backup a plugin"
 help-restore: "&e/pp restore <plugin> [version] &7- Restore from backup"
 help-scan: "&e/pp scan <plugin> &7- Scan plugin for malware"
+
+# Information & Discovery commands
 help-list: "&e/pp list &7- List managed plugins"
 help-detect: "&e/pp detect &7- Find unmanaged plugins"
+help-discover: "&e/pp discover &7- Discover popular plugins"
+help-info: "&e/pp info &7- Show plugin information"
+
+# System & Configuration commands
 help-logs: "&e/pp logs &7- View, export or clear plugin logs"
 help-logs-view: "&e/pp logs view [plugin] [limit] &7- View recent logs"
 help-logs-export: "&e/pp logs export [plugin] &7- Export logs to a file"
 help-logs-clear: "&e/pp logs clear &7- Clear all logs"
 help-sources: "&e/pp sources &7- Manage plugin sources"
+help-refreshconfig: "&e/pp refreshconfig &7- Reload PluginPilot configuration"
+help-clearcache: "&e/pp clearcache &7- Clear plugin search cache"
+help-debug: "&e/pp debug &7- Toggle debug mode"
+help-import: "&e/pp import &7- Import plugins from other managers"

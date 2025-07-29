@@ -1,6 +1,7 @@
 package xyz.inv1s1bl3.pluginpilot;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bstats.bukkit.Metrics;
 import xyz.inv1s1bl3.pluginpilot.commands.PPilotCommand;
 import xyz.inv1s1bl3.pluginpilot.persistence.DatabaseManager;
 import xyz.inv1s1bl3.pluginpilot.integration.PluginSourceManager;
@@ -37,6 +38,10 @@ public final class PluginPilot extends JavaPlugin {
         
         // Start plugin detection task if enabled
         startDetectionTask();
+        
+        // Initialize bStats metrics
+        int pluginId = 26692;
+        Metrics metrics = new Metrics(this, pluginId);
         
         // Display aesthetic enable message with GitHub attribution
         getLogger().info("\n" +
